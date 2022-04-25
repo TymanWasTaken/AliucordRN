@@ -1,10 +1,13 @@
 import { sha } from "aliucord-version";
 import { ApplicationCommandOptionType } from "../api/Commands";
-import Plugin from "../entities/Plugin";
+import Plugin, { PluginOptions } from "../entities/Plugin";
 import { getByProps, i18n, MessageActions } from "../metro";
 import DebugInfo from "../utils/debug/DebugInfo";
 import { makeAsyncEval } from "../utils/misc";
 
+@PluginOptions({
+    description: "Adds a few useful commands to discord"
+})
 export default class CoreCommands extends Plugin {
     start() {
         const ClydeUtils = getByProps("sendBotMessage");

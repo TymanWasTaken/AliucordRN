@@ -1,8 +1,11 @@
 import { ApplicationCommand, Commands, CommandSection } from "../api/Commands";
-import Plugin from "../entities/Plugin";
+import Plugin, { PluginOptions } from "../entities/Plugin";
 import { getByProps } from "../metro";
 import { after } from "../utils/Patcher";
 
+@PluginOptions({
+    description: "Adds commands functionality support to plugins"
+})
 export default class CommandHandler extends Plugin {
     start() {
         const commands = getByProps("getBuiltInCommands");

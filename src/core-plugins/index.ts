@@ -10,7 +10,12 @@ export function startAll() {
         const { name } = pluginClass;
         try {
             window.Aliucord.logger.info("Loading CorePlugin " + name);
-            new pluginClass().start();
+            const instance = new pluginClass();
+            if (!instance.options) { // Check if plugin was setup correctly
+                window.Aliucord.logger.error("Failed to start CorePlugin " + name + ", did not set options correctly");
+                continue;
+            }
+            instance.start();
         } catch (e) {
             window.Aliucord.logger.error("Failed to start CorePlugin " + name, e);
         }
