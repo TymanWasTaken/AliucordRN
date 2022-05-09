@@ -1,4 +1,4 @@
-(function (exports) {
+var aliu = (function (exports) {
   'use strict';
 
   function _classCallCheck(instance, Constructor) {
@@ -110,13 +110,6 @@
     };
   }
 
-  const AliucordNative = window.nativeModuleProxy.AliucordNative;
-  AliucordNative.existsFile;
-  AliucordNative.deleteFile;
-  AliucordNative.listNativeModules;
-  const checkPermissions = AliucordNative.checkPermissions;
-  const requestPermissions = AliucordNative.requestPermissions;
-
   const DiscordLogger = getByProps("setLogFn").default;
   let Logger = /*#__PURE__*/function (_DiscordLogger) {
     _inherits(Logger, _DiscordLogger);
@@ -195,7 +188,7 @@
     return Logger;
   }(DiscordLogger);
 
-  const logger$2 = new Logger("Metro");
+  const logger$3 = new Logger("Metro");
 
   function isModuleBlacklisted(id) {
     if (id === 54 || id >= 966 && id <= 994) return true;
@@ -230,7 +223,7 @@
           return defaultExport ? module.exports.default : exports ? module.exports : module;
         }
       } catch (e) {
-        logger$2.error("Error during getModule", e);
+        logger$3.error("Error during getModule", e);
       }
     }
 
@@ -290,7 +283,7 @@
           return defaultExport ? module.exports.default : exports ? module.exports : module;
         }
       } catch (e) {
-        logger$2.error("Error during getAll", e);
+        logger$3.error("Error during getAll", e);
       }
     }
 
@@ -363,8 +356,10 @@
   const ReactNative = getByProps("Text", "Image");
   const Constants = getByProps("ActionTypes");
   const URLOpener = getByProps("openURL", "handleSupportedURL");
+  const Forms = getByProps("FormSection");
+  const Styles = getByProps("createThemedStyleSheet");
 
-  var Metro = /*#__PURE__*/Object.freeze({
+  var index$4 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     getModule: getModule,
     getByProps: getByProps,
@@ -392,9 +387,119 @@
     React: React,
     ReactNative: ReactNative,
     Constants: Constants,
-    URLOpener: URLOpener
+    URLOpener: URLOpener,
+    Forms: Forms,
+    Styles: Styles
   });
 
+  var __async$4 = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = value => {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var rejected = value => {
+        try {
+          step(generator.throw(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+  function useSettings(settings) {
+    const [, update] = React.useState(0);
+    return React.useMemo(() => ({
+      get(key, defaultValue) {
+        return settings.get(key, defaultValue);
+      },
+
+      set(key, value) {
+        settings.set(key, value).then(() => update(x => x + 1));
+      }
+
+    }), []);
+  }
+  let Settings = /*#__PURE__*/function () {
+    function Settings(module, snapshot) {
+      _classCallCheck(this, Settings);
+
+      this.module = module;
+      this.snapshot = snapshot;
+    }
+
+    _createClass(Settings, [{
+      key: "get",
+      value: function get(key, defaultValue) {
+        var _a;
+
+        return (_a = this.snapshot[key]) != null ? _a : defaultValue;
+      }
+    }, {
+      key: "set",
+      value: function set(key, value) {
+        return __async$4(this, null, function* () {
+          const {
+            snapshot
+          } = this;
+          snapshot[key] = value;
+          return this._persist();
+        });
+      }
+    }, {
+      key: "delete",
+      value: function _delete(key) {
+        return __async$4(this, null, function* () {
+          if (key in this.snapshot) {
+            delete this.snapshot[key];
+            return this._persist();
+          }
+        });
+      }
+    }, {
+      key: "_persist",
+      value: function _persist() {
+        return window.nativeModuleProxy.AliucordNative.writeSettings(this.module, JSON.stringify(this.snapshot, null, 2));
+      }
+    }], [{
+      key: "make",
+      value: function make(module) {
+        return __async$4(this, null, function* () {
+          var _a;
+
+          const snapshot = (_a = yield window.nativeModuleProxy.AliucordNative.getSettings(module)) != null ? _a : "{}";
+
+          try {
+            const data = JSON.parse(snapshot);
+            if (typeof data !== "object") throw new Error("JSON data was not an object.");
+            return new this(module, data);
+          } catch (err) {
+            window.Aliucord.logger.error(`[SettingsAPI] Settings of module ${module} are corrupt and were cleared.`);
+            return new this(module, {});
+          }
+        });
+      }
+    }]);
+
+    return Settings;
+  }();
+
+  var ApplicationCommandInputType = /* @__PURE__ */(ApplicationCommandInputType2 => {
+    ApplicationCommandInputType2[ApplicationCommandInputType2["BUILT_IN"] = 0] = "BUILT_IN";
+    ApplicationCommandInputType2[ApplicationCommandInputType2["BUILT_IN_TEXT"] = 1] = "BUILT_IN_TEXT";
+    ApplicationCommandInputType2[ApplicationCommandInputType2["BUILT_IN_INTEGRATION"] = 2] = "BUILT_IN_INTEGRATION";
+    ApplicationCommandInputType2[ApplicationCommandInputType2["BOT"] = 3] = "BOT";
+    ApplicationCommandInputType2[ApplicationCommandInputType2["PLACEHOLDER"] = 4] = "PLACEHOLDER";
+    return ApplicationCommandInputType2;
+  })(ApplicationCommandInputType || {});
   var ApplicationCommandOptionType = /* @__PURE__ */(ApplicationCommandOptionType2 => {
     ApplicationCommandOptionType2[ApplicationCommandOptionType2["SUB_COMMAND"] = 1] = "SUB_COMMAND";
     ApplicationCommandOptionType2[ApplicationCommandOptionType2["SUB_COMMAND_GROUP"] = 2] = "SUB_COMMAND_GROUP";
@@ -409,6 +514,12 @@
     ApplicationCommandOptionType2[ApplicationCommandOptionType2["ATTACHMENT"] = 11] = "ATTACHMENT";
     return ApplicationCommandOptionType2;
   })(ApplicationCommandOptionType || {});
+  var ApplicationCommandType = /* @__PURE__ */(ApplicationCommandType2 => {
+    ApplicationCommandType2[ApplicationCommandType2["CHAT"] = 1] = "CHAT";
+    ApplicationCommandType2[ApplicationCommandType2["USER"] = 2] = "USER";
+    ApplicationCommandType2[ApplicationCommandType2["MESSAGE"] = 3] = "MESSAGE";
+    return ApplicationCommandType2;
+  })(ApplicationCommandType || {});
   const SnowflakeUtils = getByProps("fromTimestamp");
 
   const _Commands = /*#__PURE__*/function () {
@@ -461,15 +572,8 @@
   };
   Commands._commands = [];
 
-  const ALIUCORD_INVITE = "https://discord.gg/EsNDvBaHVU";
-
-  var AliuConstants = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    ALIUCORD_INVITE: ALIUCORD_INVITE
-  });
-
-  const logger$1 = new Logger("Patcher");
-  const patchInfoSym = Symbol("PatchInfo");
+  const logger$2 = new Logger("Patcher");
+  const patchInfoSym = "__ALIUCORD_PATCH_INFO__";
   var PatchPriority = /* @__PURE__ */(PatchPriority2 => {
     PatchPriority2[PatchPriority2["MIN"] = 0] = "MIN";
     PatchPriority2[PatchPriority2["DEFAULT"] = 15] = "DEFAULT";
@@ -530,7 +634,7 @@
       value: function error(patch2, type, _error) {
         const message = (patch2.plugin ? `[${patch2.plugin}] ` : "") + `Error during ${this.methodName} ${type}
 `;
-        logger$1.error(message, _error);
+        logger$2.error(message, _error);
       }
     }, {
       key: "patchCount",
@@ -604,11 +708,11 @@
         idx--;
 
         do {
-          const lasR = ctx.result;
+          const lastRes = ctx.result;
           const lastError = ctx.error;
 
           try {
-            const result = patches[idx].after(ctx, ...ctx.args);
+            const result = patches[idx].after(ctx, ctx.result, ...ctx.args);
             if (result !== void 0) ctx.result = result;
           } catch (err) {
             this.error(patches[idx], "PostPatch", err);
@@ -616,7 +720,7 @@
             if (lastError !== null) {
               ctx.error = lastError;
             } else {
-              ctx.result = lasR;
+              ctx.result = lastRes;
             }
           }
         } while (--idx >= 0);
@@ -748,7 +852,7 @@
     }, priority, plugin));
   }
 
-  var Patcher$1 = /*#__PURE__*/Object.freeze({
+  var patcher = /*#__PURE__*/Object.freeze({
     __proto__: null,
     PatchPriority: PatchPriority,
     Patch: Patch,
@@ -891,56 +995,45 @@
     return CommandHandler;
   }(Plugin);
 
-  const sha = "767d277";
+  const sha = "415b343";
 
-  let DebugInfo = /*#__PURE__*/function () {
-    function DebugInfo() {
-      _classCallCheck(this, DebugInfo);
+  const DebugInfo = {
+    get discordVersion() {
+      try {
+        return `${ReactNative.NativeModules.InfoDictionaryManager.Version} (${ReactNative.NativeModules.InfoDictionaryManager.ReleaseChannel})`;
+      } catch (ex) {
+        return "unknown";
+      }
+    },
+
+    get system() {
+      try {
+        return `${ReactNative.Platform.OS} ${ReactNative.Platform.constants.Release} (SDK v${ReactNative.Platform.Version}) ${ReactNative.NativeModules.DCDDeviceManager.device} ${ReactNative.Platform.constants.uiMode}`;
+      } catch (ex) {
+        return "unknown";
+      }
+    },
+
+    get reactNativeVersion() {
+      try {
+        const ver = ReactNative.Platform.constants.reactNativeVersion;
+        return `${ver.major || 0}.${ver.minor || 0}.${ver.patch || 0}`;
+      } catch (ex) {
+        return "unknown";
+      }
+    },
+
+    get hermesVersion() {
+      try {
+        if (window.HermesInternal === void 0) return "N/A";
+        const runtimeProps = window.HermesInternal.getRuntimeProperties();
+        return `${runtimeProps["OSS Release Version"]} ${runtimeProps["Build"]} (v${runtimeProps["Bytecode Version"]})`;
+      } catch (ex) {
+        return "unknown";
+      }
     }
 
-    _createClass(DebugInfo, null, [{
-      key: "getDiscordVersion",
-      value: function getDiscordVersion() {
-        try {
-          return `${ReactNative.NativeModules.InfoDictionaryManager.Version} (${ReactNative.NativeModules.InfoDictionaryManager.ReleaseChannel})`;
-        } catch (ex) {
-          return "unknown";
-        }
-      }
-    }, {
-      key: "getSystem",
-      value: function getSystem() {
-        try {
-          return `${ReactNative.Platform.OS} ${ReactNative.Platform.constants.Release} (SDK v${ReactNative.Platform.Version}) ${ReactNative.NativeModules.DCDDeviceManager.device} ${ReactNative.Platform.constants.uiMode}`;
-        } catch (ex) {
-          return "unknown";
-        }
-      }
-    }, {
-      key: "getReactNativeVersion",
-      value: function getReactNativeVersion() {
-        try {
-          const ver = ReactNative.Platform.constants.reactNativeVersion;
-          return `${ver.major || 0}.${ver.minor || 0}.${ver.patch || 0}`;
-        } catch (ex) {
-          return "unknown";
-        }
-      }
-    }, {
-      key: "getHermesVersion",
-      value: function getHermesVersion() {
-        try {
-          if (window.HermesInternal === void 0) return "N/A";
-          const runtimeProps = window.HermesInternal.getRuntimeProperties();
-          return `${runtimeProps["OSS Release Version"]} ${runtimeProps["Build"]} (v${runtimeProps["Bytecode Version"]})`;
-        } catch (ex) {
-          return "unknown";
-        }
-      }
-    }]);
-
-    return DebugInfo;
-  }();
+  };
 
   function makeAsyncEval(code) {
     return `
@@ -1061,11 +1154,11 @@
           execute: (args2, ctx2) => __async$3(this, null, function* () {
             MessageActions.sendMessage(ctx2.channel.id, {
               content: `**Debug Info:**
-                        > Discord: ${DebugInfo.getDiscordVersion()}
+                        > Discord: ${DebugInfo.discordVersion}
                         > Aliucord: ${sha}
-                        > System: ${DebugInfo.getSystem()}
-                        > React: ${DebugInfo.getReactNativeVersion()}
-                        > Hermes: ${DebugInfo.getHermesVersion()}
+                        > System: ${DebugInfo.system}
+                        > React: ${DebugInfo.reactNativeVersion}
+                        > Hermes: ${DebugInfo.hermesVersion}
                     `.replace(/^\s+/gm, "")
             });
           })
@@ -1121,9 +1214,9 @@
     return NoTrack;
   }(Plugin);
 
-  const plugins = [CommandHandler, CoreCommands, NoTrack];
+  const plugins$1 = [CommandHandler, CoreCommands, NoTrack];
   function startAll() {
-    for (const pluginClass of plugins) {
+    for (const pluginClass of plugins$1) {
       const {
         name
       } = pluginClass;
@@ -1136,6 +1229,645 @@
       }
     }
   }
+
+  var __async$2 = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = value => {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var rejected = value => {
+        try {
+          step(generator.throw(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+
+  const AliucordNative = window.nativeModuleProxy.AliucordNative;
+  function mkdir(path, recursive = false) {
+    return __async$2(this, null, function* () {
+      try {
+        return AliucordNative.mkdir(path, recursive);
+      } catch (err) {
+        return false;
+      }
+    });
+  }
+  const existsFile = AliucordNative.existsFile;
+  const deleteFile = AliucordNative.deleteFile;
+  function readFile(path, encoding = "utf-8") {
+    return __async$2(this, null, function* () {
+      return AliucordNative.readFile(path, encoding);
+    });
+  }
+  function writeFile(path, content, encoding = "utf-8") {
+    return __async$2(this, null, function* () {
+      return AliucordNative.writeFile(path, content, encoding);
+    });
+  }
+  function getManifest(plugin) {
+    return __async$2(this, null, function* () {
+      try {
+        const data = yield AliucordNative.getManifest(plugin);
+        return JSON.parse(data);
+      } catch (err) {
+        return null;
+      }
+    });
+  }
+  const listNativeModules = AliucordNative.listNativeModules;
+  const checkPermissions = AliucordNative.checkPermissions;
+  const requestPermissions = AliucordNative.requestPermissions;
+
+  var index$3 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    mkdir: mkdir,
+    existsFile: existsFile,
+    deleteFile: deleteFile,
+    readFile: readFile,
+    writeFile: writeFile,
+    getManifest: getManifest,
+    listNativeModules: listNativeModules,
+    checkPermissions: checkPermissions,
+    requestPermissions: requestPermissions
+  });
+
+  const ALIUCORD_INVITE = "https://discord.gg/EsNDvBaHVU";
+  const ALIUCORD_GITHUB = "https://github.com/Aliucord/Aliucord";
+  const ALIUCORD_PATREON = "https://patreon.com/Aliucord";
+
+  var constants = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ALIUCORD_INVITE: ALIUCORD_INVITE,
+    ALIUCORD_GITHUB: ALIUCORD_GITHUB,
+    ALIUCORD_PATREON: ALIUCORD_PATREON
+  });
+
+  var __async$1 = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = value2 => {
+        try {
+          step(generator.next(value2));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var rejected = value2 => {
+        try {
+          step(generator.throw(value2));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+  let ws;
+  let patched = false;
+  function startDebugWs() {
+    if (ws) return;
+    ws = new WebSocket("ws://localhost:3000");
+    const logger = new Logger("DebugWS");
+    logger.info("Connecting to debug ws");
+    ws.addEventListener("open", () => logger.info("Connected with debug websocket"));
+    ws.addEventListener("error", e => logger.error(e.message));
+    ws.addEventListener("message", message => __async$1(this, null, function* () {
+      var _a, _b;
+
+      try {
+        const {
+          data
+        } = message;
+        const parsed = JSON.parse(data);
+
+        switch (parsed.type) {
+          case "COMMAND":
+            if (parsed.message.includes("await")) {
+              console.log(yield eval(makeAsyncEval(parsed.message)));
+            } else {
+              console.log(eval(parsed.message));
+            }
+
+            break;
+
+          case "AUTOCOMPLETE":
+            if (parsed.message.match(/[\w\d.]+/)) {
+              if (parsed.message.includes(".")) {
+                const parts = parsed.message.split(".");
+                const context = parts.slice(0, parts.length - 1);
+                let value;
+
+                try {
+                  value = eval(context.join("."));
+                } catch (e) {
+                  break;
+                }
+
+                if (typeof value === "object" && !Array.isArray(value) && value) {
+                  const keys = Object.keys(value);
+                  (_a = ws == null ? void 0 : ws.send) == null ? void 0 : _a.call(ws, JSON.stringify({
+                    type: "AUTOCOMPLETE",
+                    line: parsed.message,
+                    completions: keys.filter(k => k.startsWith(parts[parts.length])).map(k => [...context, k].join("."))
+                  }));
+                  break;
+                }
+              }
+            }
+
+            (_b = ws == null ? void 0 : ws.send) == null ? void 0 : _b.call(ws, JSON.stringify({
+              type: "AUTOCOMPLETE",
+              line: parsed.message,
+              completions: []
+            }));
+            break;
+        }
+      } catch (e) {
+        logger.error(e);
+      }
+    }));
+    ws.addEventListener("close", () => {
+      logger.info("Disconnected from debug websocket, reconnecting in 3 seconds");
+      ws = null;
+      setTimeout(startDebugWs, 3e3);
+    });
+
+    if (!patched) {
+      before(globalThis, "nativeLoggingHook", (_, message2, level) => {
+        if ((ws == null ? void 0 : ws.readyState) === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: "MESSAGE",
+            level,
+            message: message2
+          }));
+        }
+      });
+      patched = true;
+    }
+  }
+
+  const assetMap = {};
+  const AssetRegistry = getByProps("registerAsset");
+  after(AssetRegistry, "registerAsset", (_, id, asset) => {
+    assetMap[asset.name] = id;
+  });
+
+  for (let i = 1;; i++) {
+    const asset = AssetRegistry.getAssetByID(i);
+
+    if (asset) {
+      assetMap[asset.name] = i;
+    } else break;
+  }
+
+  function getAssetId(assetName) {
+    return assetMap[assetName];
+  }
+  function findAssets(keyword) {
+    keyword = keyword.toLowerCase();
+    const names = [];
+
+    for (const name in assetMap) {
+      if (name.toLowerCase().includes(keyword)) {
+        names.push(name);
+      }
+    }
+
+    return names;
+  }
+
+  const {
+    FormSection,
+    FormSwitch,
+    FormRow
+  } = Forms;
+  function AliucordPage() {
+    const settings = useSettings(window.Aliucord.settings);
+    return /* @__PURE__ */React.createElement(React.Fragment, null, /* @__PURE__ */React.createElement(FormSection, {
+      title: "Settings",
+      android_noDivider: true
+    }, /* @__PURE__ */React.createElement(FormRow, {
+      label: "Automatically disable plugins on crash",
+      trailing: /* @__PURE__ */React.createElement(FormSwitch, {
+        value: settings.get("disablePluginsOnCrash", true),
+        onValueChange: v => settings.set("disablePluginsOnCrash", v)
+      })
+    }), /* @__PURE__ */React.createElement(FormRow, {
+      label: "Automatically update Aliucord",
+      trailing: /* @__PURE__ */React.createElement(FormSwitch, {
+        value: settings.get("autoUpdateAliucord", false),
+        onValueChange: v => settings.set("autoUpdateAliucord", v)
+      })
+    }), /* @__PURE__ */React.createElement(FormRow, {
+      label: "Automatically update Plugins",
+      trailing: /* @__PURE__ */React.createElement(FormSwitch, {
+        value: settings.get("autoUpdatePlugins", false),
+        onValueChange: v => settings.set("autoUpdatePlugins", v)
+      })
+    }), /* @__PURE__ */React.createElement(FormRow, {
+      label: "Enable Debug WebSocket",
+      trailing: /* @__PURE__ */React.createElement(FormSwitch, {
+        value: settings.get("debugWS", false),
+        onValueChange: v => {
+          settings.set("debugWS", v);
+          if (v) startDebugWs();
+        }
+      })
+    })), /* @__PURE__ */React.createElement(FormSection, {
+      title: "Socials"
+    }, /* @__PURE__ */React.createElement(FormRow, {
+      label: "Source Code",
+      leading: /* @__PURE__ */React.createElement(FormRow.Icon, {
+        source: getAssetId("img_account_sync_github_white")
+      }),
+      trailing: FormRow.Arrow,
+      onPress: () => URLOpener.openURL(ALIUCORD_GITHUB)
+    }), /* @__PURE__ */React.createElement(FormRow, {
+      label: "Support Server",
+      leading: /* @__PURE__ */React.createElement(FormRow.Icon, {
+        source: getAssetId("img_help_icon")
+      }),
+      trailing: FormRow.Arrow,
+      onPress: () => URLOpener.openURL(ALIUCORD_INVITE)
+    }), /* @__PURE__ */React.createElement(FormRow, {
+      label: "Support Us",
+      leading: /* @__PURE__ */React.createElement(FormRow.Icon, {
+        source: getAssetId("ic_premium_perk_heart_24px")
+      }),
+      trailing: FormRow.Arrow,
+      onPress: () => URLOpener.openURL(ALIUCORD_PATREON)
+    })));
+  }
+
+  const logger$1 = new Logger("PluginManager");
+  let PluginManager = /*#__PURE__*/function () {
+    function PluginManager() {
+      _classCallCheck(this, PluginManager);
+    }
+
+    _createClass(PluginManager, null, [{
+      key: "isEnabled",
+      value: function isEnabled(plugin) {
+        return window.Aliucord.settings.get("plugins", {})[plugin] === true;
+      }
+    }, {
+      key: "enable",
+      value: function enable(plugin) {
+        const plugins = window.Aliucord.settings.get("plugins", {});
+        plugins[plugin] = true;
+        window.Aliucord.settings.set("plugins", plugins);
+      }
+    }, {
+      key: "disable",
+      value: function disable(plugin) {
+        const plugins = window.Aliucord.settings.get("plugins", {});
+        plugins[plugin] = false;
+        window.Aliucord.settings.set("plugins", plugins);
+      }
+    }, {
+      key: "_register",
+      value: function _register(plugin) {
+        const {
+          name
+        } = plugin;
+        if (name in this.plugins) throw new Error(`Plugin ${name} already registered`);
+
+        try {
+          logger$1.info(`Loading Plugin ${name}...`);
+          Settings.make(name).then(settings => {
+            const inst = this.plugins[name] = new plugin(settings);
+            inst.start();
+          });
+        } catch (err) {
+          logger$1.error(`Failed to load Plugin ${name}
+`, err);
+        }
+      }
+    }]);
+
+    return PluginManager;
+  }();
+  PluginManager.plugins = {};
+
+  var __defProp = Object.defineProperty;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, {
+    enumerable: true,
+    configurable: true,
+    writable: true,
+    value
+  }) : obj[key] = value;
+
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {})) if (__hasOwnProp.call(b, prop)) __defNormalProp(a, prop, b[prop]);
+
+    if (__getOwnPropSymbols) for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop)) __defNormalProp(a, prop, b[prop]);
+    }
+    return a;
+  };
+  const {
+    View,
+    Text,
+    FlatList
+  } = ReactNative;
+  const plugins = [{
+    name: "Test",
+    description: "Test Plugin",
+    version: "1.0.0",
+    authors: [{
+      username: "Pot of Avarice",
+      id: "950095902922661988"
+    }, {
+      username: "Discord",
+      id: "643945264868098049"
+    }]
+  }];
+
+  for (let i = 1; i < 5; i++) {
+    const copy = __spreadValues({}, plugins[i - 1]);
+
+    copy.name += "a";
+    copy.description += copy.description;
+    plugins[i] = copy;
+  }
+
+  const styles = Styles.createThemedStyleSheet({
+    list: {
+      padding: 10
+    },
+    card: {
+      borderRadius: 5,
+      margin: 10,
+      backgroundColor: Styles.ThemeColorMap.BACKGROUND_TERTIARY
+    },
+    header: {
+      flexDirection: "row"
+    },
+    bodyCard: {
+      backgroundColor: Styles.ThemeColorMap.BACKGROUND_SECONDARY
+    },
+    bodyText: {
+      color: Styles.ThemeColorMap.TEXT_NORMAL,
+      padding: 16
+    },
+    text: {
+      fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
+      color: Styles.ThemeColorMap.TEXT_NORMAL,
+      fontSize: 16,
+      lineHeight: 22
+    },
+    link: {
+      marginLeft: 5,
+      fontFamily: Constants.Fonts.PRIMARY_SEMIBOLD,
+      fontSize: 16,
+      lineHeight: 22,
+      color: Styles.ThemeColorMap.TEXT_LINK
+    }
+  });
+
+  function PluginCard({
+    plugin
+  }) {
+    const [isEnabled, setIsEnabled] = React.useState(PluginManager.isEnabled(plugin.name));
+    return /* @__PURE__ */React.createElement(View, {
+      style: styles.card
+    }, /* @__PURE__ */React.createElement(Forms.FormRow, {
+      label: /* @__PURE__ */React.createElement(View, {
+        style: styles.header
+      }, /* @__PURE__ */React.createElement(Text, {
+        style: styles.text
+      }, plugin.name, " v", plugin.version, " by"), plugin.authors.map((a, i) => /* @__PURE__ */React.createElement(Text, {
+        key: a.id,
+        style: styles.link,
+        onPress: () => getByProps("showUserProfile").showUserProfile({
+          userId: a.id
+        })
+      }, a.username, i !== plugin.authors.length - 1 && ","))),
+      trailing: /* @__PURE__ */React.createElement(Forms.FormSwitch, {
+        value: isEnabled,
+        onValueChange: v => {
+          if (v) PluginManager.enable(plugin.name);else PluginManager.disable(plugin.name);
+          setIsEnabled(v);
+        }
+      })
+    }), /* @__PURE__ */React.createElement(View, {
+      style: styles.bodyCard
+    }, /* @__PURE__ */React.createElement(Forms.FormText, {
+      style: styles.bodyText
+    }, plugin.description)), /* @__PURE__ */React.createElement(View, {
+      style: {
+        flexDirection: "row",
+        alignContent: "space-between"
+      }
+    }, /* @__PURE__ */React.createElement(Forms.FormRow.Icon, {
+      source: getAssetId("img_account_sync_github_white")
+    }), /* @__PURE__ */React.createElement(View, null, /* @__PURE__ */React.createElement(Forms.FormRow.Icon, {
+      source: getAssetId("")
+    }))));
+  }
+
+  function PluginsPage() {
+    return /* @__PURE__ */React.createElement(FlatList, {
+      data: plugins,
+      renderItem: ({
+        item
+      }) => /* @__PURE__ */React.createElement(PluginCard, {
+        key: item.name,
+        plugin: item
+      }),
+      keyExtractor: plugin => plugin.name,
+      style: styles.list
+    });
+  }
+
+  function UpdaterPage() {
+    return null;
+  }
+
+  function patchSettings() {
+    const {
+      FormSection,
+      FormRow
+    } = Forms;
+    const UserSettingsOverviewWrapper = getModule(m => {
+      var _a;
+
+      return ((_a = m.default) == null ? void 0 : _a.name) === "UserSettingsOverviewWrapper";
+    });
+    after(getModule(m => {
+      var _a;
+
+      return ((_a = m.default) == null ? void 0 : _a.name) === "getScreens";
+    }), "default", (_, res) => {
+      res.ASettings = {
+        title: "Aliucord",
+        render: AliucordPage
+      };
+      res.APlugins = {
+        title: "Plugins",
+        render: PluginsPage
+      };
+      res.AThemes = {
+        title: "Themes",
+        render: () => /* @__PURE__ */React.createElement(ReactNative.Text, null, "Hello World")
+      };
+      res.AUpdater = {
+        title: "Updater",
+        render: UpdaterPage
+      };
+    });
+    const unpatch = after(UserSettingsOverviewWrapper, "default", (_, res) => {
+      unpatch();
+      const {
+        navigation
+      } = res.props;
+      after(res.type.prototype, "renderSupportAndAcknowledgements", (_2, {
+        props
+      }) => {
+        const idx = props.children.findIndex(c => {
+          var _a;
+
+          return ((_a = c == null ? void 0 : c.type) == null ? void 0 : _a.name) === "UploadLogsButton";
+        });
+
+        if (idx !== -1) {
+          props.children.splice(idx, 1);
+        }
+      });
+      after(res.type.prototype, "render", (_2, {
+        props
+      }) => {
+        const nitroIndex = props.children.findIndex(c => {
+          var _a;
+
+          return ((_a = c == null ? void 0 : c.props) == null ? void 0 : _a.title) === i18n.Messages.PREMIUM_SETTINGS;
+        });
+        const aliucordSection = /* @__PURE__ */React.createElement(FormSection, {
+          key: "AliucordSection",
+          title: `Aliucord (${sha})`
+        }, /* @__PURE__ */React.createElement(FormRow, {
+          label: "Aliucord",
+          trailing: FormRow.Arrow,
+          onPress: () => navigation.push("ASettings")
+        }), /* @__PURE__ */React.createElement(FormRow, {
+          label: "Plugins",
+          trailing: FormRow.Arrow,
+          onPress: () => navigation.push("APlugins")
+        }), /* @__PURE__ */React.createElement(FormRow, {
+          label: "Themes",
+          trailing: FormRow.Arrow,
+          onPress: () => navigation.push("AThemes")
+        }), /* @__PURE__ */React.createElement(FormRow, {
+          label: "Updater",
+          trailing: FormRow.Arrow,
+          onPress: () => navigation.push("AUpdater")
+        }));
+        props.children.splice(nitroIndex, 0, aliucordSection);
+      });
+    });
+  }
+
+  var __async = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = value => {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var rejected = value => {
+        try {
+          step(generator.throw(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+
+  function initWithPerms() {}
+
+  let settings;
+  const logger = new Logger("AliucordMain");
+  function load() {
+    return __async(this, null, function* () {
+      settings = yield Settings.make("Aliucord");
+
+      try {
+        logger.info("Loading...");
+        checkPermissions().then(granted => {
+          if (granted) initWithPerms();else {
+            ReactNative.Alert.alert("Storage Access", "Aliucord needs access to your storage to load plugins and themes.", [{
+              text: "OK",
+              onPress: () => requestPermissions().then(permissionGranted => {
+                if (permissionGranted) initWithPerms();else alert("Aliucord needs access to your storage to load plugins and themes.");
+              })
+            }]);
+          }
+        });
+        startAll();
+
+        if (settings.get("debugWS", false)) {
+          startDebugWs();
+        }
+
+        if (false) ;
+
+        patchSettings();
+      } catch (error) {
+        logger.error(error);
+      }
+    });
+  }
+
+  var Aliucord = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    get settings () { return settings; },
+    logger: logger,
+    load: load
+  });
+
+  var index$2 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ApplicationCommandInputType: ApplicationCommandInputType,
+    ApplicationCommandOptionType: ApplicationCommandOptionType,
+    ApplicationCommandType: ApplicationCommandType,
+    Commands: Commands,
+    Patcher: Patcher,
+    PluginManager: PluginManager,
+    useSettings: useSettings,
+    Settings: Settings
+  });
+
+  var index$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Plugin: Plugin
+  });
 
   const {
     hasOwnProperty
@@ -1182,255 +1914,26 @@
     return tempReturn;
   }
 
-  var __async$2 = (__this, __arguments, generator) => {
-    return new Promise((resolve, reject) => {
-      var fulfilled = value => {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      var rejected = value => {
-        try {
-          step(generator.throw(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
-
-      step((generator = generator.apply(__this, __arguments)).next());
-    });
-  };
-  const UserSettingsOverviewWrapper = getModule(m => {
-    var _a;
-
-    return ((_a = m.default) == null ? void 0 : _a.name) === "UserSettingsOverviewWrapper";
+  var index = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Constants: constants,
+    Patcher: patcher,
+    DebugInfo: DebugInfo,
+    findInReactTree: findInReactTree,
+    findInTree: findInTree,
+    getAssetId: getAssetId,
+    findAssets: findAssets,
+    makeAsyncEval: makeAsyncEval
   });
-  let UserSettingsOverview;
-  function patchSettings() {
-    const {
-      FormSection,
-      FormRow
-    } = getByProps("FormSection");
-    const nav = getByProps("pushLazy", "push");
-    const unpatch = after(UserSettingsOverviewWrapper, "default", ({
-      result
-    }) => {
-      if (UserSettingsOverview) {
-        return;
-      }
 
-      unpatch();
-      UserSettingsOverview = result.type;
-      after(UserSettingsOverview.prototype, "render", ({
-        result: result2
-      }) => {
-        var _a, _b;
+  window.Aliucord = Aliucord;
+  load();
 
-        const {
-          children
-        } = result2.props;
-        const supportComponent = findInReactTree(children, c => (c == null ? void 0 : c.children) && Array.isArray(c.children) && c.children.some(x => {
-          var _a2;
-
-          return ((_a2 = x == null ? void 0 : x.type) == null ? void 0 : _a2.name) === "UploadLogsButton";
-        }));
-
-        for (let i = 0; i < supportComponent.children.length; i++) {
-          const child = supportComponent.children[i];
-
-          if (((_a = child.props) == null ? void 0 : _a.label) === i18n.Messages.SUPPORT) {
-            child.props.onPress = () => __async$2(this, null, function* () {
-              URLOpener.openURL(ALIUCORD_INVITE);
-            });
-          } else if (((_b = child.type) == null ? void 0 : _b.name) === "UploadLogsButton") {
-            supportComponent.children.splice(i, 1);
-            i--;
-          }
-        }
-
-        const nitroIndex = children.findIndex(c => {
-          var _a2;
-
-          return ((_a2 = c == null ? void 0 : c.props) == null ? void 0 : _a2.title) === i18n.Messages.PREMIUM_SETTINGS;
-        });
-        const nitro = children[nitroIndex];
-        const aliucordSection = /* @__PURE__ */React.createElement(FormSection, {
-          key: "AliucordSection",
-          title: "Aliucord",
-          titleTextStyle: nitro.props.titleTextStyle,
-          titleWrapperStyle: nitro.props.titleWrapperStyle
-        }, /* @__PURE__ */React.createElement(FormRow, {
-          key: "ASettings",
-          label: "Aliucord Settings",
-          arrowShown: true,
-          onPress: () => nav.push(() => /* @__PURE__ */React.createElement(ReactNative.Text, null, "Lol"), {})
-        }), /* @__PURE__ */React.createElement(FormRow, {
-          key: "APlugins",
-          label: "Plugins",
-          arrowShown: true,
-          onPress: () => nav.push(() => /* @__PURE__ */React.createElement(ReactNative.Text, null, "Lol"), {})
-        }), /* @__PURE__ */React.createElement(FormRow, {
-          key: "AThemes",
-          label: "Themes",
-          arrowShown: true,
-          onPress: () => nav.push(() => /* @__PURE__ */React.createElement(ReactNative.Text, null, "Lol"), {})
-        }), /* @__PURE__ */React.createElement(FormRow, {
-          key: "AUpdater",
-          label: "Updater",
-          arrowShown: true,
-          onPress: () => nav.push(() => /* @__PURE__ */React.createElement(ReactNative.Text, null, "Lol"), {})
-        }));
-        children.splice(nitroIndex, 0, aliucordSection);
-      });
-    });
-  }
-
-  var __async$1 = (__this, __arguments, generator) => {
-    return new Promise((resolve, reject) => {
-      var fulfilled = value => {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      var rejected = value => {
-        try {
-          step(generator.throw(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
-
-      step((generator = generator.apply(__this, __arguments)).next());
-    });
-  };
-  const logger = new Logger("DebugWS");
-  let DebugWS = /*#__PURE__*/function () {
-    function DebugWS() {
-      _classCallCheck(this, DebugWS);
-    }
-
-    _createClass(DebugWS, [{
-      key: "start",
-      value: function start() {
-        logger.info("Connecting to debug ws");
-        this.socket = new WebSocket("ws://localhost:9090");
-        this.socket.addEventListener("open", () => logger.info("Connected with debug websocket"));
-        this.socket.addEventListener("error", e => logger.error(e.message));
-        this.socket.addEventListener("message", message => __async$1(this, null, function* () {
-          try {
-            const {
-              data
-            } = message;
-
-            if (data.includes("await")) {
-              console.log(yield eval(makeAsyncEval(data)));
-            } else {
-              console.log(eval(data));
-            }
-          } catch (e) {
-            logger.error(e);
-          }
-        }));
-        before(globalThis, "nativeLoggingHook", (_, message2, level) => {
-          var _a;
-
-          if (((_a = this.socket) == null ? void 0 : _a.readyState) === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify({
-              level,
-              message: message2
-            }));
-          }
-        });
-      }
-    }]);
-
-    return DebugWS;
-  }();
-
-  var __async = (__this, __arguments, generator) => {
-    return new Promise((resolve, reject) => {
-      var fulfilled = value => {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      var rejected = value => {
-        try {
-          step(generator.throw(value));
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      var step = x => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
-
-      step((generator = generator.apply(__this, __arguments)).next());
-    });
-  };
-
-  function initWithPerms() {}
-
-  let Aliucord = /*#__PURE__*/function () {
-    function Aliucord() {
-      _classCallCheck(this, Aliucord);
-
-      this.logger = new Logger("Aliucord");
-      this.debugWS = new DebugWS();
-      this.Constants = AliuConstants;
-      this.Commands = Commands;
-      this.Metro = Metro;
-      this.Patcher = Patcher$1;
-    }
-
-    _createClass(Aliucord, [{
-      key: "load",
-      value: function load() {
-        return __async(this, null, function* () {
-          try {
-            this.logger.info("Loading...");
-            checkPermissions().then(granted => {
-              if (granted) initWithPerms();else {
-                ReactNative.Alert.alert("Storage Access", "Aliucord needs access to your storage to load plugins and themes.", [{
-                  text: "OK",
-                  onPress: () => requestPermissions().then(permissionGranted => {
-                    if (permissionGranted) initWithPerms();else alert("Aliucord needs access to your storage to load plugins and themes.");
-                  })
-                }]);
-              }
-            });
-            startAll();
-            this.debugWS.start();
-
-            if (false) ;
-
-            patchSettings();
-          } catch (error) {
-            this.logger.error(error);
-          }
-        });
-      }
-    }]);
-
-    return Aliucord;
-  }();
-
-  const aliucord = window.Aliucord = new Aliucord();
-  aliucord.load();
-
-  exports.aliucord = aliucord;
+  exports.api = index$2;
+  exports.entities = index$1;
+  exports.metro = index$4;
+  exports.native = index$3;
+  exports.utils = index;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
